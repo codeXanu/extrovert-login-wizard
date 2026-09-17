@@ -43,28 +43,17 @@ function PronounsModal({
   };
 
   return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center">
     <div
       className="
-        fixed
-        inset-0
-        z-50
-        flex
-        items-end
-        bg-black/70
-        backdrop-blur-sm
+        w-full
+        max-w-[500px]
+        rounded-t-3xl
+        bg-[#15151c]
+        p-6
+        shadow-2xl
       "
     >
-
-      <div
-        className="
-          max-h-[85vh]
-          w-full
-          overflow-hidden
-          rounded-t-[28px]
-          bg-[#171717]
-          text-white
-        "
-      >
 
         {/* Drag indicator */}
 

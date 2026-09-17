@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef ,useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import SignupLayout from "../components/signup/SignupLayout.jsx";
@@ -52,8 +52,8 @@ function SignupPage() {
   const navigate = useNavigate();
 
 
-  const [showPronouns, setShowPronouns] =
-    useState(false);
+  const [showPronouns, setShowPronouns] = useState(false);
+  const otpInputRefs = useRef([]);
 
 
   // =====================================================
@@ -136,27 +136,22 @@ function SignupPage() {
   // FINAL SIGN UP
   // =====================================================
 
-  const handleSignup = () => {
+    const handleSignup = async () => {
+        const validationError = validateCurrentStep();
 
-    if (!validateCurrentStep()) {
-      return;
-    }
+        if (validationError) {
+            setError(validationError);
+            return;
+        }
 
+        setLoading(true);
 
-    setLoading(true);
+        await new Promise((resolve) => setTimeout(resolve, 1200));
 
+        setLoading(false);
 
-    setTimeout(() => {
-
-      setLoading(false);
-
-      // We'll replace this with success page
-      // after creating it.
-
-      nextStep();
-
-    }, 1200);
-  };
+        navigate("/home");
+    };
 
 
   // =====================================================
@@ -280,52 +275,109 @@ function SignupPage() {
           </p>
 
 
-          <div className="flex gap-2 sm:gap-4">
+            <div className="flex gap-2 sm:gap-4">
 
-            {Array.from({ length: 6 }).map(
-              (_, index) => (
-                <input
-                  key={index}
-                  value={otp[index] || ""}
-                  maxLength={1}
-                  inputMode="numeric"
-                  onChange={(event) => {
+                {Array.from({ length: 6 }).map((_, index) => (
+                    <input
+                    key={index}
+                    ref={(element) => {
+                        otpInputRefs.current[index] = element;
+                    }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={otp[index] || ""}
+                    onChange={(event) => {
 
-                    const value =
-                      event.target.value.replace(
-                        /\D/g,
-                        ""
-                      );
+                        const value = event.target.value.replace(/\D/g, "");
 
-                    const otpArray =
-                      otp.split("");
+                        if (!value) {
+                        return;
+                        }
 
-                    otpArray[index] = value;
+                        const otpArray = otp.split("");
 
-                    setOtp(
-                      otpArray
+                        otpArray[index] = value;
+
+                        const newOtp = otpArray
                         .join("")
-                        .slice(0, 6)
-                    );
-                  }}
-                  className="
-                    h-12
-                    min-w-0
-                    flex-1
-                    border-b
-                    border-white/30
-                    bg-transparent
-                    text-center
-                    text-xl
-                    text-white
-                    outline-none
-                    focus:border-white
-                  "
-                />
-              )
-            )}
+                        .slice(0, 6);
 
-          </div>
+                        setOtp(newOtp);
+
+                        // Automatically move to next input
+                        if (index < 5) {
+                        otpInputRefs.current[index + 1]?.focus();
+                        }
+
+                    }}
+                    onKeyDown={(event) => {
+
+                        if (event.key !== "Backspace") {
+                            return;
+                        }
+
+                        event.preventDefault();
+
+                        const otpArray = otp.split("");
+
+                        // ----------------------------------
+                        // Current input has a value
+                        // Delete it and stay here
+                        // ----------------------------------
+
+                        if (otp[index]) {
+
+                            otpArray[index] = "";
+
+                            setOtp(
+                            otpArray
+                                .join("")
+                                .slice(0, 6)
+                            );
+
+                            return;
+                        }
+
+
+                        // ----------------------------------
+                        // Current input is already empty
+                        // Move to previous input
+                        // and delete previous digit
+                        // ----------------------------------
+
+                        if (index > 0) {
+
+                            otpArray[index - 1] = "";
+
+                            setOtp(
+                            otpArray
+                                .join("")
+                                .slice(0, 6)
+                            );
+
+                            otpInputRefs.current[index - 1]?.focus();
+                        }
+
+                        }}
+                    className="
+                        h-12
+                        min-w-0
+                        flex-1
+                        border-b
+                        border-white/30
+                        bg-transparent
+                        text-center
+                        text-xl
+                        text-white
+                        outline-none
+                        transition
+                        focus:border-white
+                    "
+                    />
+                ))}
+
+            </div>
 
 
           <div className="mt-5 text-right">
